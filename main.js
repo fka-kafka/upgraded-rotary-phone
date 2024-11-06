@@ -40,6 +40,7 @@ async function displaySavedProjects() {
 
   allProjects.forEach((project) => {
     const projectContainer = document.createElement("div");
+    projectContainer.id = project.dateAdded;
     projectContainer.classList.add(
       "bg-white",
       "p-4",
@@ -55,16 +56,45 @@ async function displaySavedProjects() {
 				<p class="text-gray-700">
 				${project?.data?.projectDescription}
 				</p>
-				<input type="checkbox" name="" id="" checked="${
-          project?.data?.completed === true ? true : false
-        }" class="mt-4">
-			`;
+				${
+          !project?.data?.completed
+            ? '<div class=" flex justify-center w-full" id="buttonDiv"><button role="checkbox" id="toggleButton" class=" bg-black text-white w-1/6 p-2 rounded-md">Complete</button></div>'
+            : ""
+        }
+			`; /* <input type="checkbox" id="checkbox"  class="mt-4"> */
 
     project?.data?.completed === true
       ? completedProjects.appendChild(projectContainer)
       : newProjects.appendChild(projectContainer);
     return;
   });
+}
+
+function changeProjectStatus(id) {
+  const allProjects = JSON.parse(localStorage.getItem("projects"));
+  allProjects.forEach((project) => {
+    if (project.dateAdded == id) {
+      project.data.completed = !project.data.completed;
+      console.log("changed");
+    }
+  });
+
+  localStorage.setItem("projects", JSON.stringify(allProjects));
+}
+
+function allowDrop(event) {
+  event.preventDefault();
+}
+
+function drag(event) {
+  event.dataTransfer.setData("text", event.target.id);
+}
+
+function drop(event) {
+  event.preventDefault();
+  const data = event.dataTransfer.getData("text");
+  const project = document.getElementById(data);
+  event.target.appendChild(project);
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
@@ -91,6 +121,35 @@ document.addEventListener("DOMContentLoaded", async function () {
     };
     reader.readAsDataURL(event.target.files[0]);
   };
+
+  /* const checkbox = document.getElementById("checkbox");
+  if (checkbox) {
+    checkbox.onchange = function () {
+      if (checkbox.checked) {
+        document
+          .getElementById("completedProjects")
+          .appendChild(checkbox.parentElement);
+        changeProjectStatus(checkbox.parentElement.id);
+      } else {
+        document
+          .getElementById("newProjects")
+          .appendChild(checkbox.parentElement);
+        changeProjectStatus(checkbox.parentElement.id);
+      }
+    };
+  } */
+
+  const button = document.querySelector("#toggleButton");
+  const buttonDiv = document.querySelector("#buttonDiv");
+  if (button && buttonDiv) {
+    document.querySelector("#toggleButton").onclick = function () {
+      document
+        .getElementById("completedProjects")
+        .appendChild(buttonDiv.parentElement);
+      changeProjectStatus(buttonDiv.parentElement.id);
+      button.parentElement.removeChild(button);
+    };
+  }
 
   document.getElementById("addProjectButton").onclick = async function () {
     const projectName = document.getElementById("projectName").value;
@@ -126,26 +185,27 @@ document.addEventListener("DOMContentLoaded", async function () {
     projectDescriptionElement.textContent = projectDescription;
     projectDescriptionElement.classList.add("text-gray-700");
 
-    let completed = false;
-    const completeCheckbox = document.createElement("input");
-    completeCheckbox.type = "checkbox";
-    completeCheckbox.classList.add("mt-4");
-    completeCheckbox.onchange = function () {
-      if (completeCheckbox.checked) {
-        completed = true;
-        document
-          .getElementById("completedProjects")
-          .appendChild(projectContainer);
-      } else {
-        document.getElementById("newProjects").appendChild(projectContainer);
-      }
-    };
+    const buttonDiv = document.createElement("div");
+    buttonDiv.id = "buttonDiv";
+    buttonDiv.classList.add("flex", "justify-center", "w-full");
 
+    const button = document.createElement("button");
+    button.role = "checkbox";
+    button.id = "toggleButton";
+		button.textContent = 'Complete'
+    button.classList.add(
+      "bg-black",
+      "text-white",
+      "w-1/6",
+      "p-2",
+      "rounded-md"
+    );
+		buttonDiv.appendChild(button)
     const projectData = {
       projectName: projectName,
       projectImage: projectImage,
       projectDescription: projectDescription,
-      completed: completed,
+      completed: false,
     };
 
     await saveToLocalStorage(projectData);
@@ -153,7 +213,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     projectContainer.appendChild(projectImageElement);
     projectContainer.appendChild(projectNameElement);
     projectContainer.appendChild(projectDescriptionElement);
-    projectContainer.appendChild(completeCheckbox);
+    projectContainer.appendChild(buttonDiv);
 
     document.getElementById("newProjects").appendChild(projectContainer);
 
@@ -169,18 +229,3 @@ document.addEventListener("DOMContentLoaded", async function () {
   const currentYear = new Date().getFullYear();
   footer.innerHTML = `&copy; ${currentYear} Tev and Brandon`;
 });
-
-function allowDrop(event) {
-  event.preventDefault();
-}
-
-function drag(event) {
-  event.dataTransfer.setData("text", event.target.id);
-}
-
-function drop(event) {
-  event.preventDefault();
-  const data = event.dataTransfer.getData("text");
-  const project = document.getElementById(data);
-  event.target.appendChild(project);
-}
