@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       document.getElementById('newProjects').appendChild(projectContainer);
 
-      // Clear the modal inputs
+
       document.getElementById('projectName').value = '';
       document.getElementById('projectDescription').value = '';
       document.getElementById('imagePreview').src = 'path/to/image.jpg';
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('myModal').classList.add('invisible');
   }
 
-  // Set dynamic year in footer
+
   const footer = document.getElementById('footer');
   const currentYear = new Date().getFullYear();
   footer.innerHTML = `&copy; ${currentYear} Tev and Brandon`;
