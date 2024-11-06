@@ -69,6 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
       document.getElementById('myModal').classList.add('invisible');
   }
+
+  // Set dynamic year in footer
+  const footer = document.getElementById('footer');
+  const currentYear = new Date().getFullYear();
+  footer.innerHTML = `&copy; ${currentYear} Tev and Brandon`;
 });
 
 function allowDrop(event) {
