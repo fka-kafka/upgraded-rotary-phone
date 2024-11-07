@@ -3,6 +3,7 @@
 //TODO:
 // Implement JSON in-app database
 // Add Project Lead and Date Added to project tile, Done, Styling Remains
+//There might be a bug with the complete button, it might not be working as intended
 
 
 function checkStorageSpace() {

@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
   const profilesContainer = document.getElementById("profilesContainer");
+  const usernames = ["Tevstark", "fka-kafka"];
+
+  // Add skeleton cards
+  usernames.forEach(() => {
+    profilesContainer.appendChild(createSkeletonCard());
+  });
 
   async function fetchGitHubProfile(username) {
     try {
@@ -8,6 +14,11 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error("Network response was not ok");
       }
       const profile = await response.json();
+      // Remove a skeleton card before rendering the actual profile
+      const skeleton = profilesContainer.querySelector(".animate-pulse");
+      if (skeleton) {
+        skeleton.remove();
+      }
       renderProfile(profile);
     } catch (error) {
       console.error(
@@ -16,6 +27,11 @@ document.addEventListener("DOMContentLoaded", function () {
       );
     }
   }
+
+  // Fetch all profiles
+  usernames.forEach(username => fetchGitHubProfile(username));
+});
+
 
   function renderProfile(profile) {
     const profileCard = document.createElement("a");
@@ -55,6 +71,56 @@ document.addEventListener("DOMContentLoaded", function () {
     profilesContainer.appendChild(profileCard);
   }
 
+  function createSkeletonCard() {
+    const skeletonCard = document.createElement("div");
+    skeletonCard.classList.add(
+      "bg-white",
+      "border",
+      "h-64",
+      "p-4",
+      "rounded-lg",
+      "shadow-lg",
+      "flex",
+      "flex-col",
+      "items-center",
+      "animate-pulse"
+    );
+
+
+    const skeletonAvatar = document.createElement("div");
+    skeletonAvatar.classList.add(
+      "w-24",
+      "h-24",
+      "rounded-full",
+      "mb-4",
+      "bg-gray-200"
+    );
+
+
+    const skeletonName = document.createElement("div");
+    skeletonName.classList.add(
+      "h-4",
+      "bg-gray-200",
+      "rounded",
+      "w-1/3",
+      "mb-4"
+    );
+
+    const skeletonBio = document.createElement("div");
+    skeletonBio.classList.add(
+      "h-4",
+      "bg-gray-200",
+      "rounded",
+      "w-2/3"
+    );
+
+    skeletonCard.appendChild(skeletonAvatar);
+    skeletonCard.appendChild(skeletonName);
+    skeletonCard.appendChild(skeletonBio);
+
+    return skeletonCard;
+  }
+
   fetchGitHubProfile("Tevstark");
   fetchGitHubProfile("fka-kafka");
-});
+
