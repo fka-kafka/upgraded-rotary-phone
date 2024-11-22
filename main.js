@@ -1,9 +1,10 @@
 // import "./src/assets/styles/style.css";
+import { sendProjectEmail } from "./src/assets/js/emailer";
 
 //TODO:
-// Implement JSON in-app database => still on it
-// Add Project Lead and Date Added to project tile, Done, Styling Remains
-//There might be a bug with the complete button, it might not be working as intended[FIXED] => convoluted event listener logic.
+// change project image to be fetched from the project's github page
+// make auto add function for recieved projects
+//
 
 function checkStorageSpace() {
   let total = 0;
@@ -33,7 +34,7 @@ async function saveToLocalStorage(projectData) {
       projectData.projectImage = await compressImage(projectData.projectImage);
     }
 
-    let newProject = { dateAdded: Date.now(), data: projectData };
+    let newProject = { dateCreated: Date.now(), data: projectData };
     allProjects.push(newProject);
 
     try {
@@ -59,7 +60,7 @@ async function cleanupOldProjects() {
   const allProjects = JSON.parse(localStorage.getItem("projects")) || [];
 
   // Keep only last 20 projects or remove completed projects
-  const sortedProjects = allProjects.sort((a, b) => b.dateAdded - a.dateAdded);
+  const sortedProjects = allProjects.sort((a, b) => b.dateCreated - a.dateCreated);
   const reducedProjects = sortedProjects.slice(0, 20);
 
   await localStorage.setItem("projects", JSON.stringify(reducedProjects));
@@ -106,12 +107,12 @@ async function displaySavedProjects() {
   const completedProjects = document.getElementById("completedProjects");
   const newProjects = document.getElementById("newProjects");
 
-  completedProjects.innerHTML = ''
-  newProjects.innerHTML = ''
+  completedProjects.innerHTML = "";
+  newProjects.innerHTML = "";
 
   allProjects.forEach((project) => {
     const projectContainer = document.createElement("div");
-    projectContainer.id = project.dateAdded;
+    projectContainer.id = project.dateCreated;
     projectContainer.classList.add(
       "bg-white",
       "p-4",
@@ -149,7 +150,7 @@ async function displaySavedProjects() {
         project?.data?.projectLead
       }</p>
       <p class="text-gray-700 mb-2">Date Added: ${new Date(
-        project.dateAdded
+        project.dateCreated
       ).toLocaleDateString()}</p>
       ${completionInfo}
       ${
@@ -168,7 +169,7 @@ async function displaySavedProjects() {
             console.log("Complete button clicked");
 
             try {
-              await changeProjectStatus(project.dateAdded);
+              await changeProjectStatus(project.dateCreated);
               const parentColumn = projectContainer.parentElement;
               projectContainer.remove();
 
@@ -194,7 +195,7 @@ async function displaySavedProjects() {
         if (deleteBtn) {
           deleteBtn.addEventListener("click", async () => {
             if (confirm("Are you sure you want to delete this project?")) {
-              await deleteProject(project.dateAdded);
+              await deleteProject(project.dateCreated);
               projectContainer.remove();
             }
           });
@@ -215,11 +216,11 @@ async function changeProjectStatus(id) {
   console.log("All projects before:", allProjects);
 
   allProjects.forEach((project) => {
-    if (project.dateAdded == id) {
+    if (project.dateCreated == id) {
       project.data.completed = !project.data.completed;
       project.data.completedDate = project.data.completed ? Date.now() : null;
       project.data.duration = project.data.completed
-        ? calculateDuration(project.dateAdded, project.data.completedDate)
+        ? calculateDuration(project.dateCreated, project.data.completedDate)
         : { hours: 0, minutes: 0 };
       console.log("Updated project:", project);
     }
@@ -233,7 +234,7 @@ async function changeProjectStatus(id) {
 async function deleteProject(id) {
   const allProjects = JSON.parse(localStorage.getItem("projects"));
   const updatedProjects = allProjects.filter(
-    (project) => project.dateAdded != id
+    (project) => project.dateCreated != id
   );
   await localStorage.setItem("projects", JSON.stringify(updatedProjects));
 }
@@ -283,13 +284,23 @@ async function clearCompletedProjects() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  console.log("loaded");
+  if (globalThis.location.search.includes('addProject')) {
+    const newProjectData = new URLSearchParams(globalThis.location.search)
+    let newProject = Object.fromEntries(newProjectData)
+    console.dir(newProject)
+    document.getElementById("projectButton").click()
+  }
+
+  console.log("DOMContentLoaded");
+
   await displaySavedProjects();
   console.log("fired");
   document.getElementById("projectButton").onclick = function () {
     console.log("clicked");
     document.getElementById("myModal").classList.remove("invisible");
   };
+
+  
 
   document.getElementsByClassName("close")[0].onclick = function () {
     document.getElementById("myModal").classList.add("invisible");
@@ -346,7 +357,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       document.getElementById("projectDescription").value;
     const projectImage = document.getElementById("imagePreview").src;
     const projectLead = document.getElementById("projectLead").value;
-    const dateAdded = new Date().toLocaleDateString();
+    const dateCreated = new Date().toLocaleDateString();
 
     const projectContainer = document.createElement("div");
     projectContainer.classList.add(
@@ -380,9 +391,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     projectLeadElement.textContent = `Project Lead: ${projectLead}`;
     projectLeadElement.classList.add("text-gray-700", "mb-2");
 
-    const dateAddedElement = document.createElement("p");
-    dateAddedElement.textContent = `Date Added: ${dateAdded}`;
-    dateAddedElement.classList.add("text-gray-700", "mb-2");
+    const dateCreatedElement = document.createElement("p");
+    dateCreatedElement.textContent = `Date Added: ${dateCreated}`;
+    dateCreatedElement.classList.add("text-gray-700", "mb-2");
 
     const buttonDiv = document.createElement("div");
     buttonDiv.classList.add("flex", "justify-center", "w-full");
@@ -429,24 +440,25 @@ document.addEventListener("DOMContentLoaded", async function () {
       projectImage,
       projectDescription,
       projectLead,
-      dateAdded: Date.now(),
+      dateCreated: Date.now(),
       completedDate: null,
       completed: false,
     };
 
     await saveToLocalStorage(projectData);
+    await sendProjectEmail(projectData)
 
     projectContainer.appendChild(projectImageElement);
     projectContainer.appendChild(projectNameElement);
     projectContainer.appendChild(projectDescriptionElement);
     projectContainer.appendChild(projectLeadElement);
-    projectContainer.appendChild(dateAddedElement);
+    projectContainer.appendChild(dateCreatedElement);
     projectContainer.appendChild(buttonDiv);
 
     document.getElementById("newProjects").appendChild(projectContainer);
 
     await displaySavedProjects();
-    
+
     document.getElementById("projectName").value = "";
     document.getElementById("projectDescription").value = "";
     document.getElementById("imagePreview").src = "path/to/image.jpg";
