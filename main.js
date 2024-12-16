@@ -34,7 +34,8 @@ async function saveToLocalStorage(projectData) {
       projectData.projectImage = await compressImage(projectData.projectImage);
     }
 
-    let newProject = { dateCreated: Date.now(), data: projectData };
+    let newProject = { ...projectData, completedDate: null, completed: false, };
+    console.dir(newProject)
     allProjects.push(newProject);
 
     try {
@@ -121,11 +122,11 @@ async function displaySavedProjects() {
     );
 
     let completionInfo = "";
-    if (project?.data?.completed) {
+    if (project?.completed) {
       const completedDate = new Date(
-        project.data.completedDate
+        project.completedDate
       ).toLocaleDateString();
-      const duration = project.data.duration || { hours: 0, minutes: 0 };
+      const duration = project.duration || { hours: 0, minutes: 0 };
       completionInfo = `
         <p class="text-gray-700 mb-2">Completed on: ${completedDate}</p>
         <p class="text-gray-700 mb-2">Duration: ${duration.hours}h ${duration.minutes}m</p>
@@ -142,25 +143,25 @@ async function displaySavedProjects() {
       </button>
     </div>
      <img src=${
-       project?.data?.projectImage
+       project?.projectImage
      } alt="Project Image" class="w-full h-48 object-cover rounded-md mb-4">
-      <h2 class="text-2xl font-bold mb-2">${project?.data?.projectName}</h2>
-      <p class="text-gray-700">${project?.data?.projectDescription}</p>
+      <h2 class="text-2xl font-bold mb-2">${project?.projectName}</h2>
+      <p class="text-gray-700">${project?.projectDescription}</p>
       <p class="text-gray-700 mb-2">Project Lead: ${
-        project?.data?.projectLead
+        project?.projectLead
       }</p>
       <p class="text-gray-700 mb-2">Date Added: ${new Date(
         project.dateCreated
       ).toLocaleDateString()}</p>
       ${completionInfo}
       ${
-        !project?.data?.completed
+        !project?.completed
           ? '<div class="flex justify-center w-full" id="buttonDiv"><button role="checkbox" id="toggleButton" class="bg-black text-white w-1/6 p-2 rounded-md">Complete</button></div>'
           : ""
       }
     `;
 
-    if (!project?.data?.completed) {
+    if (!project?.completed) {
       setTimeout(() => {
         const button = projectContainer.querySelector("#toggleButton");
         if (button) {
@@ -203,7 +204,7 @@ async function displaySavedProjects() {
       }, 0);
     }
 
-    project?.data?.completed === true
+    project?.completed === true
       ? completedProjects.appendChild(projectContainer)
       : newProjects.appendChild(projectContainer);
   });
@@ -217,10 +218,10 @@ async function changeProjectStatus(id) {
 
   allProjects.forEach((project) => {
     if (project.dateCreated == id) {
-      project.data.completed = !project.data.completed;
-      project.data.completedDate = project.data.completed ? Date.now() : null;
-      project.data.duration = project.data.completed
-        ? calculateDuration(project.dateCreated, project.data.completedDate)
+      project.completed = !project.completed;
+      project.completedDate = project.completed ? Date.now() : null;
+      project.duration = project.completed
+        ? calculateDuration(project.dateCreated, project.completedDate)
         : { hours: 0, minutes: 0 };
       console.log("Updated project:", project);
     }
@@ -264,7 +265,7 @@ function drop(event) {
 async function clearCompletedProjects() {
   const allProjects = JSON.parse(localStorage.getItem("projects")) || [];
   const activeProjects = allProjects.filter(
-    (project) => !project.data.completed
+    (project) => !project.completed
   );
   await localStorage.setItem("projects", JSON.stringify(activeProjects));
 
@@ -284,7 +285,7 @@ async function clearCompletedProjects() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  if (globalThis.location.search.includes('addProject')) {
+  if (globalThis.location.search.includes('projectName')) {
     const newProjectData = new URLSearchParams(globalThis.location.search)
     let newProject = Object.fromEntries(newProjectData)
     console.dir(newProject)
@@ -294,13 +295,18 @@ document.addEventListener("DOMContentLoaded", async function () {
   console.log("DOMContentLoaded");
 
   await displaySavedProjects();
+
+  const resp = await fetch('https://api.github.com/repos/fka-kafka/wolt-django')
+  const data = await resp.json()
+  console.dir(data)
+
   console.log("fired");
   document.getElementById("projectButton").onclick = function () {
     console.log("clicked");
     document.getElementById("myModal").classList.remove("invisible");
   };
 
-  
+
 
   document.getElementsByClassName("close")[0].onclick = function () {
     document.getElementById("myModal").classList.add("invisible");
@@ -440,9 +446,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       projectImage,
       projectDescription,
       projectLead,
-      dateCreated: Date.now(),
-      completedDate: null,
-      completed: false,
+      dateCreated: Date.now()
     };
 
     await saveToLocalStorage(projectData);
