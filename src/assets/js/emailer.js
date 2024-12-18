@@ -1,7 +1,6 @@
 import emailjs from "@emailjs/browser";
 
 // TODO
-// change emailjs email template
 
 emailjs.init(import.meta.env.VITE_PUBLIC_KEY);
 

@@ -4,7 +4,7 @@ import { sendProjectEmail } from "./src/assets/js/emailer";
 //TODO:
 // change project image to be fetched from the project's github page
 // make auto add function for recieved projects
-//
+
 
 function checkStorageSpace() {
   let total = 0;
