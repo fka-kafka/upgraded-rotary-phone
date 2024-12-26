@@ -1,10 +1,10 @@
 // import "./src/assets/styles/style.css";
 import { sendProjectEmail } from "./src/assets/js/emailer";
+import { getRepo, createRepo } from "./src/assets/js/apis";
 
 //TODO:
 // change project image to be fetched from the project's github page
 // make auto add function for recieved projects
-
 
 function checkStorageSpace() {
   let total = 0;
@@ -17,10 +17,11 @@ function checkStorageSpace() {
 }
 
 async function saveToLocalStorage(projectData) {
+  console.log("adding to local storage");
   try {
     const usedSpace = checkStorageSpace();
     if (usedSpace > 4.5) {
-      console.warn(`Storage space running low: ${usedSpace}MB used`);
+      condaseqrsole.warn(`Storage space running low: ${usedSpace}MB used`);
       await cleanupOldProjects();
     }
 
@@ -30,12 +31,12 @@ async function saveToLocalStorage(projectData) {
         : [];
 
     // Optimize image data if needed
-    if (projectData.projectImage && projectData.projectImage.length > 50000) {
-      projectData.projectImage = await compressImage(projectData.projectImage);
-    }
+    // if (projectData.projectImage && projectData.projectImage.length > 50000) {
+    //   projectData.projectImage = await compressImage(projectData.projectImage);
+    // }
 
-    let newProject = { ...projectData, completedDate: null, completed: false, };
-    console.dir(newProject)
+    let newProject = { ...projectData, completedDate: null, completed: false };
+    console.dir(newProject);
     allProjects.push(newProject);
 
     try {
@@ -52,7 +53,7 @@ async function saveToLocalStorage(projectData) {
   } catch (error) {
     console.error("Storage error:", error);
     alert(
-      "Unable to save project due to storage limitations. Please delete some old projects."
+      "Unable to save project due to storage limitations. Please delete some old projects.",
     );
   }
 }
@@ -61,38 +62,40 @@ async function cleanupOldProjects() {
   const allProjects = JSON.parse(localStorage.getItem("projects")) || [];
 
   // Keep only last 20 projects or remove completed projects
-  const sortedProjects = allProjects.sort((a, b) => b.dateCreated - a.dateCreated);
+  const sortedProjects = allProjects.sort(
+    (a, b) => b.dateCreated - a.dateCreated,
+  );
   const reducedProjects = sortedProjects.slice(0, 20);
 
   await localStorage.setItem("projects", JSON.stringify(reducedProjects));
 }
 
-async function compressImage(base64String) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = base64String;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+// async function compressImage(base64String) {
+//   return new Promise((resolve) => {
+//     const img = new Image();
+//     img.src = base64String;
+//     img.onload = () => {
+//       const canvas = document.createElement("canvas");
+//       const ctx = canvas.getContext("2d");
 
-      // Set target dimensions (e.g., max 800px width)
-      const maxWidth = 800;
-      let width = img.width;
-      let height = img.height;
+//       // Set target dimensions (e.g., max 800px width)
+//       const maxWidth = 800;
+//       let width = img.width;
+//       let height = img.height;
 
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
+//       if (width > maxWidth) {
+//         height = (height * maxWidth) / width;
+//         width = maxWidth;
+//       }
 
-      canvas.width = width;
-      canvas.height = height;
+//       canvas.width = width;
+//       canvas.height = height;
 
-      ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compress to JPEG with 0.7 quality
-    };
-  });
-}
+//       ctx.drawImage(img, 0, 0, width, height);
+//       resolve(canvas.toDataURL("image/jpeg", 0.7)); // Compress to JPEG with 0.7 quality
+//     };
+//   });
+// }
 
 // error handling
 function retrieveSavedProjects() {
@@ -112,19 +115,25 @@ async function displaySavedProjects() {
   newProjects.innerHTML = "";
 
   allProjects.forEach((project) => {
-    const projectContainer = document.createElement("div");
+    const projectContainer = document.createElement("button");
     projectContainer.id = project.dateCreated;
     projectContainer.classList.add(
       "bg-white",
       "p-4",
       "rounded-lg",
-      "shadow-lg"
+      "shadow-lg",
+      "flex",
+      "flex-col",
     );
+    projectContainer.addEventListener("click", (event) => {
+      const url = `https://github.com/${project?.projectLead}/${project?.repositoryName}`;
+      window.open(url, "_blank");
+    });
 
     let completionInfo = "";
     if (project?.completed) {
       const completedDate = new Date(
-        project.completedDate
+        project.completedDate,
       ).toLocaleDateString();
       const duration = project.duration || { hours: 0, minutes: 0 };
       completionInfo = `
@@ -142,16 +151,11 @@ async function displaySavedProjects() {
         </svg>
       </button>
     </div>
-     <img src=${
-       project?.projectImage
-     } alt="Project Image" class="w-full h-48 object-cover rounded-md mb-4">
       <h2 class="text-2xl font-bold mb-2">${project?.projectName}</h2>
       <p class="text-gray-700">${project?.projectDescription}</p>
-      <p class="text-gray-700 mb-2">Project Lead: ${
-        project?.projectLead
-      }</p>
+      <p class="text-gray-700 mb-2">Project Lead: ${project?.projectLead}</p>
       <p class="text-gray-700 mb-2">Date Added: ${new Date(
-        project.dateCreated
+        project.dateCreated,
       ).toLocaleDateString()}</p>
       ${completionInfo}
       ${
@@ -183,6 +187,8 @@ async function displaySavedProjects() {
               } else {
                 completedProjects.appendChild(projectContainer);
               }
+
+              projectContainer.removeEventListener(type, listener)
 
               await displaySavedProjects();
             } catch (error) {
@@ -235,7 +241,7 @@ async function changeProjectStatus(id) {
 async function deleteProject(id) {
   const allProjects = JSON.parse(localStorage.getItem("projects"));
   const updatedProjects = allProjects.filter(
-    (project) => project.dateCreated != id
+    (project) => project.dateCreated != id,
   );
   await localStorage.setItem("projects", JSON.stringify(updatedProjects));
 }
@@ -264,9 +270,7 @@ function drop(event) {
 
 async function clearCompletedProjects() {
   const allProjects = JSON.parse(localStorage.getItem("projects")) || [];
-  const activeProjects = allProjects.filter(
-    (project) => !project.completed
-  );
+  const activeProjects = allProjects.filter((project) => !project.completed);
   await localStorage.setItem("projects", JSON.stringify(activeProjects));
 
   const completedProjectsContainer =
@@ -276,7 +280,7 @@ async function clearCompletedProjects() {
   while (completedProjectsContainer.lastChild) {
     if (completedProjectsContainer.lastChild !== heading) {
       completedProjectsContainer.removeChild(
-        completedProjectsContainer.lastChild
+        completedProjectsContainer.lastChild,
       );
     } else {
       break;
@@ -285,28 +289,33 @@ async function clearCompletedProjects() {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  if (globalThis.location.search.includes('projectName')) {
-    const newProjectData = new URLSearchParams(globalThis.location.search)
-    let newProject = Object.fromEntries(newProjectData)
-    console.dir(newProject)
-    document.getElementById("projectButton").click()
+  if (globalThis.location.search.includes("projectName")) {
+    const newProjectData = new URLSearchParams(globalThis.location.search);
+    let newProject = Object.fromEntries(newProjectData);
+    console.dir(newProject);
+    document.getElementById("projectButton").click();
   }
 
   console.log("DOMContentLoaded");
 
-  await displaySavedProjects();
+  // const selection = document.getElementById('select-lead')
+  // selection.addEventListener('change', e => {
+  //   console.log(e.target.value)
+  // })
 
-  const resp = await fetch('https://api.github.com/repos/fka-kafka/wolt-django')
-  const data = await resp.json()
-  console.dir(data)
+  await displaySavedProjects();
+  const repoResponse = await getRepo();
+  console.dir(repoResponse);
+
+  // const resp = await fetch('https://api.github.com/repos/fka-kafka/wolt-django')
+  // const data = await resp.json()
+  // console.dir(data)
 
   console.log("fired");
   document.getElementById("projectButton").onclick = function () {
     console.log("clicked");
     document.getElementById("myModal").classList.remove("invisible");
   };
-
-
 
   document.getElementsByClassName("close")[0].onclick = function () {
     document.getElementById("myModal").classList.add("invisible");
@@ -318,13 +327,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   };
 
-  document.getElementById("projectImage").onchange = function (event) {
-    const reader = new FileReader();
-    reader.onload = function () {
-      document.getElementById("imagePreview").src = reader.result;
-    };
-    reader.readAsDataURL(event.target.files[0]);
-  };
+  // document.getElementById("projectImage").onchange = function (event) {
+  //   const reader = new FileReader();
+  //   reader.onload = function () {
+  //     document.getElementById("imagePreview").src = reader.result;
+  //   };
+  //   reader.readAsDataURL(event.target.files[0]);
+  // };
 
   /* const checkbox = document.getElementById("checkbox");
   if (checkbox) {
@@ -356,13 +365,38 @@ document.addEventListener("DOMContentLoaded", async function () {
   //     buttonDiv.parentElement.removeChild(buttonDiv);
   //   };
   // }
+  //
+  const leadPicker = document.getElementById("projectLead");
 
-  document.getElementById("addProjectButton").onclick = async function () {
-    const projectName = document.getElementById("projectName").value;
-    const projectDescription =
-      document.getElementById("projectDescription").value;
-    const projectImage = document.getElementById("imagePreview").src;
-    const projectLead = document.getElementById("projectLead").value;
+  leadPicker.onchange = function (e) {
+    document.getElementById("selectedLead").innerHTML = e.target.value;
+    console.log(e.target.value, e.target.value.length);
+    if (
+      (e.target.value === "Tevstark" || e.target.value === "fka-kafka") &&
+      e.target.value.length !== 0
+    ) {
+      const repoInput = document.getElementById("repositoryName");
+      repoInput.removeAttribute("disabled");
+    } else {
+      const repoInput = document.getElementById("repositoryName");
+      repoInput.setAttribute("disabled", true);
+    }
+  };
+
+  document.getElementById("newProjectForm").onsubmit = async function (e) {
+    // const projectName = document.getElementById("projectName").value;
+    // const projectDescription =
+    //   document.getElementById("projectDescription").value;
+    // const projectImage = document.getElementById("imagePreview").src;
+    // const projectLead = document.getElementById("projectLead").value;
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const projectName = formData.get("projectName");
+    const projectDescription = formData.get("projectDescription");
+    const repositoryName = formData.get("repositoryName");
+    const projectLead = formData.get("projectLead");
     const dateCreated = new Date().toLocaleDateString();
 
     const projectContainer = document.createElement("div");
@@ -370,20 +404,20 @@ document.addEventListener("DOMContentLoaded", async function () {
       "bg-white",
       "p-4",
       "rounded-lg",
-      "shadow-lg"
+      "shadow-lg",
     );
     projectContainer.setAttribute("draggable", "true");
     projectContainer.ondragstart = drag;
 
-    const projectImageElement = document.createElement("img");
-    projectImageElement.src = projectImage;
-    projectImageElement.classList.add(
-      "w-full",
-      "h-48",
-      "object-cover",
-      "rounded-md",
-      "mb-4"
-    );
+    // const projectImageElement = document.createElement("img");
+    // projectImageElement.src = projectImage;
+    // projectImageElement.classList.add(
+    //   "w-full",
+    //   "h-48",
+    //   "object-cover",
+    //   "rounded-md",
+    //   "mb-4",
+    // );
 
     const projectNameElement = document.createElement("h2");
     projectNameElement.textContent = projectName;
@@ -396,6 +430,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     const projectLeadElement = document.createElement("p");
     projectLeadElement.textContent = `Project Lead: ${projectLead}`;
     projectLeadElement.classList.add("text-gray-700", "mb-2");
+
+    const repositoryElement = document.createElement("a");
+    repositoryElement.textContent = `https://github.com/${projectLead}/${repositoryName}`;
+    repositoryElement.classList.add(
+      "text-gray-700",
+      "mb-2",
+      "hover:no-underline",
+    );
 
     const dateCreatedElement = document.createElement("p");
     dateCreatedElement.textContent = `Date Added: ${dateCreated}`;
@@ -411,7 +453,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       "text-white",
       "w-1/6",
       "p-2",
-      "rounded-md"
+      "rounded-md",
     );
 
     // event listener doesnt work on refresh
@@ -443,19 +485,22 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const projectData = {
       projectName,
-      projectImage,
       projectDescription,
       projectLead,
-      dateCreated: Date.now()
+      repositoryName,
+      dateCreated: Date.now(),
     };
 
-    await saveToLocalStorage(projectData);
-    await sendProjectEmail(projectData)
+    const repoResponse = await createRepo(repositoryName);
+    if (repoResponse?.status === 201) {
+      await saveToLocalStorage(projectData);
+      await sendProjectEmail(projectData);
+    }
 
-    projectContainer.appendChild(projectImageElement);
     projectContainer.appendChild(projectNameElement);
     projectContainer.appendChild(projectDescriptionElement);
     projectContainer.appendChild(projectLeadElement);
+    projectContainer.appendChild(repositoryElement);
     projectContainer.appendChild(dateCreatedElement);
     projectContainer.appendChild(buttonDiv);
 
@@ -465,8 +510,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     document.getElementById("projectName").value = "";
     document.getElementById("projectDescription").value = "";
-    document.getElementById("imagePreview").src = "path/to/image.jpg";
-    document.getElementById("projectImage").value = "";
+    document.getElementById("repositoryName").value = "";
 
     document.getElementById("myModal").classList.add("invisible");
   };
@@ -509,7 +553,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     clearButton.addEventListener("click", async () => {
       if (
         confirm(
-          "Are you sure you want to delete all completed projects? This cannot be undone."
+          "Are you sure you want to delete all completed projects? This cannot be undone.",
         )
       ) {
         await clearCompletedProjects();

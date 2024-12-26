@@ -14,6 +14,7 @@ export async function sendProjectEmail(projectData) {
     );
 
     console.dir(response);
+    return response
   } catch (error) {
     return error;
   }
