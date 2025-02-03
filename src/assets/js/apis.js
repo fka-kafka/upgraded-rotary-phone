@@ -1,4 +1,4 @@
-import { Octokit } from "https://esm.sh/octokit";
+import { Octokit } from "https://esm.sh/@octokit/core@4.2.2";
 
 const octokit = new Octokit({
   auth: import.meta.env.VITE_AUTH_KEY,
@@ -28,17 +28,9 @@ export async function createRepo(repoName, description) {
 export async function getRepository(repoName, repoOwner) {
   try {
     console.log(repoName, repoOwner);
-    const [repoData, collaborators, issues, languages] = await Promise.all([
+    const [repoData, issues, languages /*,collaborators*/] = await Promise.all([
       // Get repo data
       octokit.request("GET /repos/{owner}/{repo}", {
-        owner: repoOwner,
-        repo: repoName,
-        headers: {
-          accept: "application/vnd.github+json",
-        },
-      }),
-      // Get repo collaborators
-      octokit.request("GET /repos/{owner}/{repo}/collaborators", {
         owner: repoOwner,
         repo: repoName,
         headers: {
@@ -61,13 +53,21 @@ export async function getRepository(repoName, repoOwner) {
           accept: "application/vnd.github+json",
         },
       }),
+      // Get repo collaborators
+      // octokit.request("GET /repos/{owner}/{repo}/collaborators", {
+      //   owner: repoOwner,
+      //   repo: repoName,
+      //   headers: {
+      //     accept: "application/vnd.github+json",
+      //   },
+      // })
     ]);
 
     return {
       repository: await repoData,
-      collaborators: await collaborators,
       issues: await issues,
       languages: await languages,
+      // collaborators: await collaborators,
     };
   } catch (error) {
     console.error("Error fetching GitHub data:", error);
@@ -89,8 +89,8 @@ export async function getLanguageColors(repoLanguages) {
   // Create a new object with only the colors we need
   const languageColors = Object.fromEntries(
     Object.keys(repoLanguages)
-      .map(lang => [lang, colorsData[lang]?.color])
-      .filter(([, color]) => color !== undefined)
+      .map((lang) => [lang, colorsData[lang]?.color])
+      .filter(([, color]) => color !== undefined),
   );
 
   return languageColors;
