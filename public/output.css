@@ -644,10 +644,6 @@ video {
   height: 100vh;
 }
 
-.h-48 {
-  height: 12rem;
-}
-
 .min-h-20 {
   min-height: 5rem;
 }
@@ -809,11 +805,6 @@ video {
   --tw-bg-opacity: 0.5;
 }
 
-.object-cover {
-  -o-object-fit: cover;
-     object-fit: cover;
-}
-
 .p-2 {
   padding: 0.5rem;
 }
@@ -880,10 +871,6 @@ video {
   font-weight: 700;
 }
 
-.font-semibold {
-  font-weight: 600;
-}
-
 .leading-tight {
   line-height: 1.25;
 }
@@ -938,6 +925,140 @@ video {
 
 .duration-300 {
   transition-duration: 300ms;
+}
+
+.loader {
+  width: 50px;
+  height: 22.5px;
+  position: relative;
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  box-shadow: 0 0 0 50px;
+  clip-path: polygon(
+        -50px -20px,
+        10% -12px,
+        20% 0,
+        calc(50% - 15px) 0,
+        calc(50% - 10px) -20px,
+        calc(50% - 8px) -15px,
+        calc(50% + 8px) -15px,
+        calc(50% + 10px) -20px,
+        calc(50% + 15px) 0,
+        80% 0,
+        90% -12px,
+        calc(100% + 50px) -20px,
+        100% 80%,
+        calc(100% + 10px) calc(100% + 10px),
+        60% 100%,
+        50% calc(100% + 15px),
+        40% 100%,
+        -10px calc(100% + 10px),
+        0 80%
+    );
+}
+
+.loader:after {
+  animation: l9 1s infinite;
+  transform: perspective(300px) translateZ(0px);
+}
+
+.card {
+  background-color: white;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  gap: 16px;
+}
+
+.card-title {
+  text-align: start;
+  font-size: 20px;
+  font-weight: 600;
+  color: #24292f;
+  margin: 0 0 4px 0;
+}
+
+.card-description {
+  text-align: start;
+  font-size: 14px;
+  color: #57606a;
+  margin: 0;
+}
+
+.card-logo {
+  width: 100px;
+  height: 100px;
+  background-color: #7dd3fc;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 4px;
+  position: absolute;
+  inset: 0;
+}
+
+.logo-cell {
+  background-color: white;
+}
+
+.card-content {
+  padding: 0 16px 16px;
+}
+
+.stats {
+  display: flex;
+  gap: 24px;
+  color: #57606a;
+  font-size: 12px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bottom-bar {
+  display: flex;
+  height: 8px;
+  margin: 0 4px;
+}
+
+.bar-red {
+  background-color: #fd8c73;
+  width: 50%;
+}
+
+.bar-yellow {
+  background-color: #ffd33d;
+  width: 50%;
+}
+
+@keyframes l9 {
+  to {
+    transform: perspective(300px) translateZ(100px);
+    opacity: 0;
+  }
 }
 
 .hover\:bg-gray-100:hover {
