@@ -3,6 +3,7 @@ import { sendProjectEmail } from "./src/assets/js/emailer";
 import { createRepo } from "./src/assets/js/apis";
 import { saveToLocalStorage, clearCompletedProjects } from "./src/assets/js/storage"
 import {displaySavedProjects} from "./src/assets/js/display"
+import { handleLogin, handleLoginRedirect, handleLogout, checkAuthentication, getUser } from "./src/assets/js/auth";
 
 function allowDrop(event) {
   event.preventDefault();
@@ -20,6 +21,33 @@ function drop(event) {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
+  const loginButton = document.getElementById("login");
+  const logoutButton = document.getElementById("logout");
+  const profile = document.getElementById('profile')
+  console.log(profile.classList)
+  loginButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await handleLogin()
+  });
+
+  await handleLoginRedirect()
+
+  logoutButton.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await handleLogout()
+  });
+
+  const isAuthenticated = await checkAuthentication()
+  if (isAuthenticated) {
+    const userProfile = await getUser();
+    loginButton.classList.toggle("hidden");
+    profile.classList.toggle('hidden')
+    console.log(userProfile);
+    const src = userProfile.picture
+    document.getElementById('pfp').src = src
+    document.getElementById('currentUser').innerText = userProfile.name
+  }
+
   if (globalThis.location.search.includes("projectName")) {
     const newProjectData = new URLSearchParams(globalThis.location.search);
     let newProject = Object.fromEntries(newProjectData);

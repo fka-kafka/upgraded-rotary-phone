@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.dropdown:hover .dropdown-options {
+  display: block;
+}
+
 .loader {
     width: 50px;
     height: 22.5px;

@@ -9,14 +9,22 @@
     </head>
 
     <body class="flex flex-col">
-        <nav class="bg-black p-6 shadow-lg text-white flex justify-between">
+        <nav class="bg-black p-4 shadow-lg text-white flex justify-between h-16">
             <span class="font-serif font-bold"
                 ><a href="index.html">NCTR</a></span
             >
-            <span class="flex gap-6">
-                <span><a href="#projects">Projects</a></span>
-                <span><a href="/src/pages/github.html">Githubs</a></span>
-                <span><a href="/src/pages/test.html">Tests</a></span>
+            <span class="flex gap-6 items-center">
+                <span><a class="" href="#projects">Projects</a></span>
+                <span><a class="" href="/src/pages/github.html">Githubs</a></span>
+                <span><a id="login" class="" href="">Login</a></span>
+                <div class="dropdown inline-block relative hidden" id="profile">
+                  <button class="cursor-pointer flex items-center"><img id="pfp" src="./src/assets/images/profile.svg" class="w-9 h-9 border border-white rounded-full"/></button>
+                  <div class="dropdown-options w-40 pt-2 hidden absolute right-0 overflow-auto bg-white rounded-md shadow-md">
+                    <a class="block text-center text-black hover:text-[#0a0a23] hover:bg-[#ddd] p-[10px] hover:rounded-t-md" href="/src/pages/github.html" id="currentUser"></a>
+                    <a class="block text-center text-white hover:text-[#0a0a23] bg-red-600 p-[10px] hover:rounded-b-md" href="#" id="logout">Logout</a>
+                  </div>
+                </div>
+                <span><a id="logout" class="hidden" href="/src/pages/test.html">Logout</a></span>
             </span>
         </nav>
         <div
