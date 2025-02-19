@@ -1,4 +1,4 @@
-import { getLanguageColors, getRepository } from "./apis";
+import { APIzer, getLanguageColors } from "./apis";
 import { retrieveSavedProjects, changeProjectStatus, deleteProject } from "./storage";
 
 export async function prepareLanguageBars(repoData) {
@@ -48,10 +48,16 @@ export async function displaySavedProjects() {
   newProjects.innerHTML = "";
 
   allProjects.forEach(async (project) => {
-    const repoData = await getRepository(
-      project?.repositoryName,
-      project?.projectLead,
-    );
+    let repoData = {}
+
+    try {
+      repoData = await new APIzer().getRepository(
+        project?.repositoryName,
+        project?.projectLead,
+      );
+    } catch (e) {
+      console.error(e)
+    }
 
     const languageBarsHTML = await prepareLanguageBars(repoData)
 

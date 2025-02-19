@@ -1,6 +1,7 @@
 // import "./src/assets/styles/style.css";
-import { sendProjectEmail } from "./src/assets/js/emailer";
-import { createRepo } from "./src/assets/js/apis";
+// import { sendProjectEmail } from "./src/assets/js/emailer";
+import { Emailer } from "./src/assets/js/emailer";
+import { APIzer } from "./src/assets/js/apis";
 import { saveToLocalStorage, clearCompletedProjects } from "./src/assets/js/storage"
 import {displaySavedProjects} from "./src/assets/js/display"
 import { handleLogin, handleLoginRedirect, handleLogout, checkAuthentication, getUser } from "./src/assets/js/auth";
@@ -24,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   const loginButton = document.getElementById("login");
   const logoutButton = document.getElementById("logout");
   const profile = document.getElementById('profile')
-  console.log(profile.classList)
+
   loginButton.addEventListener("click", async (e) => {
     e.preventDefault();
     await handleLogin()
@@ -177,10 +178,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     const loader = document.getElementById("loader");
     loader.classList.remove("hidden");
 
-    const repoResponse = await createRepo(repositoryName);
+    const repoResponse = await new APIzer().createRepo(projectLead, repositoryName, projectDescription);
     if (repoResponse?.status === 201) {
       await saveToLocalStorage(projectData);
-      const emailResponse = await sendProjectEmail(projectData);
+      const emailResponse = await new Emailer().sendProjectEmail(projectData);
       if (emailResponse?.status) {
         loader.classList.add("hidden");
       }

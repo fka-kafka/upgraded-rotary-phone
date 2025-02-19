@@ -106,6 +106,3 @@ function createSkeletonCard() {
 
   return skeletonCard;
 }
-
-fetchGitHubProfile("Tevstark");
-fetchGitHubProfile("fka-kafka");

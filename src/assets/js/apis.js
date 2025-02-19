@@ -1,79 +1,80 @@
 import { Octokit } from "https://esm.sh/@octokit/core@4.2.2";
+import { Credentializer } from "./credentials";
 
-const octokit = new Octokit({
-  auth: import.meta.env.VITE_AUTH_KEY,
-});
+// const octokit = new Octokit({
+//   auth: import.meta.env.VITE_KAFKA_AUTH_KEY,
+// });
 
-export async function createRepo(repoName, description) {
-  try {
-    const createResponse = await octokit.request("POST /user/repos", {
-      name: repoName,
-      description: description,
-      homepage: "https://github.com",
-      private: false,
-      is_template: false,
-      headers: {
-        accept: "application/vnd.github+json",
-      },
-    });
-    console.dir(createResponse);
-    return createResponse;
-  } catch (error) {
-    console.error("Status:", error.status);
-    console.error("Response:", error.response);
-    console.error("Message:", error.message);
-  }
-}
+// export async function createRepo(repoName, description) {
+//   try {
+//     const createResponse = await octokit.request("POST /user/repos", {
+//       name: repoName,
+//       description: description,
+//       homepage: "https://github.com",
+//       private: false,
+//       is_template: false,
+//       headers: {
+//         accept: "application/vnd.github+json",
+//       },
+//     });
+//     console.dir(createResponse);
+//     return createResponse;
+//   } catch (error) {
+//     console.error("Status:", error.status);
+//     console.error("Response:", error.response);
+//     console.error("Message:", error.message);
+//   }
+// }
 
-export async function getRepository(repoName, repoOwner) {
-  try {
-    console.log(repoName, repoOwner);
-    const [repoData, issues, languages /*,collaborators*/] = await Promise.all([
-      // Get repo data
-      octokit.request("GET /repos/{owner}/{repo}", {
-        owner: repoOwner,
-        repo: repoName,
-        headers: {
-          accept: "application/vnd.github+json",
-        },
-      }),
-      // Get repo issues
-      octokit.request("GET /repos/{owner}/{repo}/issues", {
-        owner: repoOwner,
-        repo: repoName,
-        headers: {
-          accept: "application/vnd.github+json",
-        },
-      }),
-      // Get repo languages
-      octokit.request("GET /repos/{owner}/{repo}/languages", {
-        owner: repoOwner,
-        repo: repoName,
-        headers: {
-          accept: "application/vnd.github+json",
-        },
-      }),
-      // Get repo collaborators
-      // octokit.request("GET /repos/{owner}/{repo}/collaborators", {
-      //   owner: repoOwner,
-      //   repo: repoName,
-      //   headers: {
-      //     accept: "application/vnd.github+json",
-      //   },
-      // })
-    ]);
+// export async function getRepository(repoName, repoOwner) {
+//   try {
+//     console.log(repoName, repoOwner);
+//     const [repoData, issues, languages /*,collaborators*/] = await Promise.all([
+//       // Get repo data
+//       octokit.request("GET /repos/{owner}/{repo}", {
+//         owner: repoOwner,
+//         repo: repoName,
+//         headers: {
+//           accept: "application/vnd.github+json",
+//         },
+//       }),
+//       // Get repo issues
+//       octokit.request("GET /repos/{owner}/{repo}/issues", {
+//         owner: repoOwner,
+//         repo: repoName,
+//         headers: {
+//           accept: "application/vnd.github+json",
+//         },
+//       }),
+//       // Get repo languages
+//       octokit.request("GET /repos/{owner}/{repo}/languages", {
+//         owner: repoOwner,
+//         repo: repoName,
+//         headers: {
+//           accept: "application/vnd.github+json",
+//         },
+//       }),
+//       // Get repo collaborators
+//       // octokit.request("GET /repos/{owner}/{repo}/collaborators", {
+//       //   owner: repoOwner,
+//       //   repo: repoName,
+//       //   headers: {
+//       //     accept: "application/vnd.github+json",
+//       //   },
+//       // })
+//     ]);
 
-    return {
-      repository: await repoData,
-      issues: await issues,
-      languages: await languages,
-      // collaborators: await collaborators,
-    };
-  } catch (error) {
-    console.error("Error fetching GitHub data:", error);
-    throw error;
-  }
-}
+//     return {
+//       repository: await repoData,
+//       issues: await issues,
+//       languages: await languages,
+//       // collaborators: await collaborators,
+//     };
+//   } catch (error) {
+//     throw new Error(error);
+//     console.error("Error fetching GitHub data:", error);;
+//   }
+// }
 
 export async function getRepoColors() {
   const colorsResponse = await fetch(
@@ -94,4 +95,94 @@ export async function getLanguageColors(repoLanguages) {
   );
 
   return languageColors;
+}
+
+export class APIzer extends Credentializer {
+  constructor() {
+    super()
+  }
+
+  async createRepo(projectLead, repoName, description) {
+    const secrets = this.credentialize(projectLead)
+
+    const octokit = new Octokit({
+      auth: secrets.authKey,
+    });
+
+    try {
+      const createResponse = await octokit.request("POST /user/repos", {
+        name: repoName,
+        description: description,
+        homepage: "https://github.com",
+        private: false,
+        is_template: false,
+        headers: {
+          accept: "application/vnd.github+json",
+        },
+      });
+      console.dir(createResponse);
+      return createResponse;
+    } catch (error) {
+      console.error("Status:", error.status);
+      console.error("Response:", error.response);
+      console.error("Message:", error.message);
+      throw new Error("Error creating new repo:", error)
+    }
+  }
+
+  async getRepository(repoName, repoOwner) {
+    const secrets = this.credentialize(repoOwner)
+
+    const octokit = new Octokit({
+      auth: secrets.authKey,
+    });
+
+    try {
+      console.log(repoName, repoOwner);
+      const [repoData, issues, languages /*,collaborators*/] = await Promise.all([
+        // Get repo data
+        octokit.request("GET /repos/{owner}/{repo}", {
+          owner: repoOwner,
+          repo: repoName,
+          headers: {
+            accept: "application/vnd.github+json",
+          },
+        }),
+        // Get repo issues
+        octokit.request("GET /repos/{owner}/{repo}/issues", {
+          owner: repoOwner,
+          repo: repoName,
+          headers: {
+            accept: "application/vnd.github+json",
+          },
+        }),
+        // Get repo languages
+        octokit.request("GET /repos/{owner}/{repo}/languages", {
+          owner: repoOwner,
+          repo: repoName,
+          headers: {
+            accept: "application/vnd.github+json",
+          },
+        }),
+        // Get repo collaborators
+        // octokit.request("GET /repos/{owner}/{repo}/collaborators", {
+        //   owner: repoOwner,
+        //   repo: repoName,
+        //   headers: {
+        //     accept: "application/vnd.github+json",
+        //   },
+        // })
+      ]);
+
+      return {
+        repository: await repoData,
+        issues: await issues,
+        languages: await languages,
+        // collaborators: await collaborators,
+      };
+    } catch (error) {
+      throw new Error(error);
+      console.error("Error fetching GitHub data:", error);
+    }
+  }
 }
